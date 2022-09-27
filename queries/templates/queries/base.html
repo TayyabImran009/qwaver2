@@ -1,0 +1,169 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- Global site tag (gtag.js) - Google Ads: 958028418 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-958028418"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'AW-958028418');
+    </script>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <meta property="og:title" content="Qwaver: Online Database Client"/>
+    <meta property="og:description" content="Turn queries into easy-to-use tools even your CEO can use."/>
+    <meta property="og:image" content="http://qwaver.io/media/qwaver-open-graph.jpg"/>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <!-- Bootstrap icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.3/font/bootstrap-icons.css">
+
+    <link rel="stylesheet" type="text/css" href="{% static 'queries/main.css' %}">
+    {% if user.is_authenticated %}
+        {% if user.profile.display_mode == 3 %}
+            <link rel="stylesheet" type="text/css" href="{% static 'queries/main-synthwave.css' %}">
+        {% elif user.profile.display_mode == 2 %}
+            <link rel="stylesheet" type="text/css" href="{% static 'queries/main-dark.css' %}">
+        {% elif user.profile.display_mode == 1 %}
+            <link rel="stylesheet" type="text/css" href="{% static 'queries/main-light.css' %}">
+        {% else %}
+            <link rel="stylesheet" type="text/css" href="{% static 'queries/main-synthwave.css' %}">
+        {% endif %}
+    {% else %}
+        {# default theme #}
+        <link rel="stylesheet" type="text/css" href="{% static 'queries/main-synthwave.css' %}">
+    {% endif %}
+
+
+    <script src="{% static 'queries/codemirror/codemirror.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'queries/codemirror/codemirror.css' %}">
+    <link rel="stylesheet" href="{% static 'queries/codemirror/dracula.css' %}">
+    <script src="{% static 'queries/codemirror/sql/sql.js' %}"></script>
+
+    {% if title %}
+        <title>{{ title }}</title>
+    {% else %}
+        <title>
+            QWAVER
+            {% if user.is_authenticated and user.profile.selected_organization != Null %}
+                : {{ user.profile.selected_organization }}
+            {% endif %}
+        </title>
+    {% endif %}
+</head>
+<body class="bootstrap-dark">
+<header class="site-header">
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand mr-4" href="{% url 'queries-home' %}">
+                <img src="{% static 'images/qwaver-logo.png' %}" height="30" style="margin: 10px;" alt="QWAVER">
+                {% if user.is_authenticated and user.profile.selected_organization != Null %}
+                    : {{ user.profile.selected_organization }}
+                {% endif %}
+            </a>
+
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle"
+                    aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            {% if user.is_authenticated and not is_setup %}
+                <div class="collapse navbar-collapse" id="navbarToggle">
+                    <ul class="navbar-nav mr-auto">
+                        <li class="nav-item">
+                            <a class="nav-item nav-link" href="{% url 'query-create' %}">New Query</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                               data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Actions
+                            </a>
+                            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                {#                                <a class="dropdown-item" href="#">Requests</a>#}
+                                <a class="dropdown-item" href="{% url 'database-list' %}">Databases</a>
+                                <a class="dropdown-item" href="{% url 'organization-list' %}">Organizations</a>
+                                <a class="dropdown-item" href="{% url 'invitation-list' %}">Invitations</a>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            {% endif %}
+
+            <!-- Navbar Right Side -->
+            <ul class="navbar-nav">
+                {% if user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                           data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <img class="rounded-circle article-img" src="{{ user.profile.image.url }}">
+                            {{ user.username }}
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <a class="dropdown-item" href="{% url 'profile' %}">Profile</a>
+                            <a class="dropdown-item" href="{% url 'logout' %}">Logout</a>
+                            {% if user.username == 'root' or user.username == 'admin' or user.username == 'brian' %}
+                                <a class="dropdown-item" href="/admin">Admin</a>
+                            {% endif %}
+                        </div>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="nav-item nav-link" href="{% url 'login' %}">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-item nav-link" href="{% url 'register' %}">Register</a>
+                    </li>
+                {% endif %}
+            </ul>
+
+        </div>
+    </nav>
+</header>
+<main role="main" class="">
+    <div class="row d-flex justify-content-center">
+        <div class="col-md-8">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+            {% block content %}{% endblock %}
+        </div>
+        {#        <div class="col-md-4">#}
+        {#            <div class="content-section">#}
+        {#                <h3>Actions</h3>#}
+        {#            <p class='text-muted'>You can put any information here you'd like.#}
+        {#                <ul class="list-group">#}
+        {#                    <li class="list-group-item"><a href="{% url 'query-create' %}">New Query</a></li>#}
+        {#                    <li class="list-group-item"><a href="{% url 'database-list' %}">Databases</a></li>#}
+        {#                    <li class="list-group-item">Search</li>#}
+        {#                    <li class="list-group-item">Topics</li>#}
+        {#                    <li class="list-group-item">Alerts</li>#}
+        {#                </ul>#}
+        {#                </p>#}
+        {#            </div>#}
+        {#        </div>#}
+    </div>
+</main>
+
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+</body>
+</html>

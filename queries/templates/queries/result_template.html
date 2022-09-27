@@ -1,0 +1,23 @@
+<div class="result mt-4 text-center">
+    {% if result.single != null %}
+        <h1 class="display-1">{{ result.single|safe }}</h1>
+    {% elif result.chart != null %}
+        <div class="mb-4">
+            <img src="data:image/{{ result.image_encoding }};base64,{{ result.chart|safe }}" class="contain"
+                 width="100%"/>
+        </div>
+    {% endif %}
+    <!-- table and download -->
+    {% if result.single == null %}
+        <div class="mb-4" style="height: 20em; overflow: scroll">
+            {{ result.table|safe }}
+        </div>
+        <div style="width: 100%; display: inline-block">
+            <a class="btn btn-success mr-2 float-left"
+               href="javascript:download_table_as_csv('results')">
+                <i class="bi bi-filetype-csv mr-1"></i>
+                Download CSV
+            </a>
+        </div>
+    {% endif %}
+</div>

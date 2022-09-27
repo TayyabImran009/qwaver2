@@ -1,0 +1,18 @@
+{% extends "queries/base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+    <div class="content-section">
+        <h1>Step 1: Create Your User</h1>
+        <form method="POST">
+            {% csrf_token %}
+            <fieldset class="form-group">
+                {{ form|crispy }}
+            </fieldset>
+            
+            <a href=" {% url 'social:begin' 'google-oauth2' %} "><i class="fa fa-google"></i>Google</a>
+            <div class="form-group">
+                <button class="btn btn-outline-info" type="submit">Next →</button>
+            </div>
+        </form>
+    </div>
+{% endblock content %}

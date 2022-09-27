@@ -1,0 +1,73 @@
+{% extends "queries/base.html" %}
+{% block content %}
+    <script>
+        function hideShow(id) {
+            let x = document.getElementById(id);
+            if (x.style.display === "none") {
+                x.style.display = "block";
+            } else {
+                x.style.display = "none";
+            }
+        }
+    </script>
+    <!-- Search -->
+    <!-- Only display when there are more than a few results -->
+    {% if result_count > 5 %}
+        <div class="row search-box bg-steel mb-3">
+            <div class="col-md-12 mt-4 mb-4 text-center">
+                <form action="{% url 'query-search' %}">
+                    <input type="text" class="search-field" name="s" value="{{ request.GET.s }}" list="recent_searches">
+                    <!-- recent searches -->
+                    {% if recent_searches|length > 0 %}
+                        <datalist id="recent_searches">
+                            {% for recent_search in recent_searches %}
+                                <option value="{{ recent_search }}">
+                            {% endfor %}
+                        </datalist>
+                    {% endif %}
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </form>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Result count -->
+    {% if result_count > 0 %}
+        <div class="col-md-12 mt-4 mb-4 ml-0 pl-0 text-left" style="color: gray;">
+            {% if result_count == 1 %}
+                1 query.
+            {% else %}
+                {{ result_count }} queries.
+            {% endif %}
+        </div>
+
+        <!-- Queries -->
+        {% if request.GET.s == null and result_count > 5 %}
+            {% include "queries/query_list_card.html" with quereies=queries %}
+        {% else %}
+            {% include "queries/query_list_row.html" with quereies=queries %}
+        {% endif %}
+
+        {% if is_paginated %}
+
+            {% if page_obj.has_previous %}
+                <a class="btn btn-outline-info mb-4" href="?page=1">First</a>
+                <a class="btn btn-outline-info mb-4" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <a class="btn btn-info mb-4" href="?page={{ num }}">{{ num }}</a>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <a class="btn btn-outline-info mb-4" href="?page={{ num }}">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <a class="btn btn-outline-info mb-4" href="?page={{ page_obj.next_page_number }}">Next</a>
+                <a class="btn btn-outline-info mb-4" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+            {% endif %}
+
+        {% endif %}
+    {% endif %}
+{% endblock content %}

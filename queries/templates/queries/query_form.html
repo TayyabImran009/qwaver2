@@ -1,0 +1,112 @@
+{% extends "queries/base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+    <script src="https://unpkg.com/sql-formatter@2.3.3/dist/sql-formatter.min.js"></script>
+    <script>
+        function doFormat() {
+            let textarea = document.getElementById('id_query');
+            {#let content = textarea.textContent;#}
+            let content = myCodeMirror.getValue();
+            let format = window.sqlFormatter.format;
+            textarea.textContent = format(content);
+            myCodeMirror.setValue(format(content))
+        }
+    </script>
+    <script>
+        function copyContent() {
+            let textarea = document.getElementById('id_query');
+            textarea.textContent = myCodeMirror.getValue();
+        }
+    </script>
+    <div class="content-section">
+        {% if is_setup %}
+            <h1>
+                Step 4
+            </h1>
+            <p>
+                Final step! Now that you've connected your database, make a query. Easiest is to paste in one you've
+                already
+                written.
+            </p>
+        {% endif %}
+
+        {% if object != null %}
+            <div class="top-right">
+                <a class="btn btn-success mr-2 float-left" href="{% url 'query-clone' object.id %}">
+                    <i class="bi bi-files mr-1"></i>
+                    Clone
+                </a>
+            </div>
+        {% endif %}
+        <form method="POST" {% if is_clone %}
+              action="{% url 'query-update' object.id %}"
+        {% endif %}
+        >
+            {% csrf_token %}
+            <fieldset class="form-group">
+                <legend class="border-bottom mb-4">{{ title }} Query</legend>
+                {{ form|crispy }}
+            </fieldset>
+            <div class="form-group">
+                <button class="btn btn-primary" type="submit" onclick="copyContent();">
+                    {% if is_setup %}
+                        Next →
+                    {% else %}
+                        Save
+                    {% endif %}
+                </button>
+                {% if object != null %}
+                    <div class="float-right">
+                        <a class="btn btn-danger mr-2"
+                           href="{% url 'query-delete' object.id %}">
+                            <i class="bi bi-file-earmark-x"></i>
+                            Delete
+                        </a>
+                    </div>
+                {% endif %}
+                <button class="btn btn-outline-success" type="button" onclick="doFormat();">Format</button>
+            </div>
+        </form>
+    </div>
+    <script>
+        let textArea = document.getElementById('id_query');
+        let codeMirrorConfig = {
+            {% if user.is_authenticated and user.profile.display_mode != 1 %}
+                theme: 'dracula',
+            {% else %}
+                theme: 'default',
+            {% endif %}
+            lineNumbers: true,
+            autofocus: true
+        }
+        let myCodeMirror = CodeMirror.fromTextArea(textArea, codeMirrorConfig);
+    </script>
+
+    {% if object != null %}
+        {% if params|length > 0 %}
+            <h3>Parameters:</h3>
+            <table class="table table-dark">
+                <thead>
+                <tr>
+                    <th>name</th>
+                    <th>default</th>
+                    <th>template</th>
+                    <th>edit</th>
+                </tr>
+                </thead>
+                {% for param in params %}
+                    <tr>
+                        <td>{{ param.name }}</td>
+                        <td>{{ param.default }}</td>
+                        <td>{{ param.template }}</td>
+                        <td>
+                            <a class="btn btn-secondary btn-sm ml-2"
+                               href="{% url 'param-update' param.id %}">Edit</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </table>
+        {% endif %}
+    {% endif %}
+
+{% endblock content %}
